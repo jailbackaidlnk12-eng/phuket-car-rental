@@ -10,17 +10,21 @@ async function createAdmin() {
         return;
     }
 
-    const passwordHash = await hashPassword("admin123");
+    // Get username and password from command line arguments
+    const username = process.argv[2] || "admin";
+    const password = process.argv[3] || "admin123";
+
+    const passwordHash = await hashPassword(password);
 
     await db.insert(users).values({
-        username: "admin",
+        username,
         passwordHash,
-        name: "System Admin",
+        name: `Admin ${username}`,
         role: "admin",
         balance: 1000000,
     });
 
-    console.log("Admin user created successfully.");
+    console.log(`Admin user '${username}' created successfully.`);
 }
 
 createAdmin();

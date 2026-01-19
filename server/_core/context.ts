@@ -34,7 +34,9 @@ export async function createContext(
     user = null;
   }
 
-  const ip = (opts.req.headers["x-forwarded-for"] as string) || opts.req.socket.remoteAddress || "unknown";
+  // Extract client IP from x-forwarded-for header (takes first IP if multiple proxies)
+  const forwardedFor = opts.req.headers["x-forwarded-for"] as string;
+  const ip = forwardedFor?.split(',')[0]?.trim() || opts.req.socket.remoteAddress || "unknown";
 
   return {
     req: opts.req,
