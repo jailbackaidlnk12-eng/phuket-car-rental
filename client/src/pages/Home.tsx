@@ -3,16 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
+import Header from "@/components/Header";
 
 import { Link } from "wouter";
-import { Gem, Shield, Clock, MapPin, Sparkles, Star, ChevronRight, Play } from "lucide-react";
+import { Gem, Shield, Clock, MapPin, Sparkles, Star, ChevronRight, Play, Leaf, ShoppingCart } from "lucide-react";
 import { usePushNotification } from "@/hooks/usePushNotification";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { language } = useLanguage();
   const { isSupported, permission, requestPermission } = usePushNotification();
+  const { totalItems } = useCart();
 
   const handleEnableNotifications = async () => {
     const granted = await requestPermission();
@@ -28,27 +31,44 @@ export default function Home() {
       {/* Header */}
       <header className="fixed w-full z-50 transition-all duration-300 bg-background/80 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="bg-primary/10 p-2 rounded-lg shadow-lg group-hover:scale-105 transition-transform duration-300 backdrop-blur-md">
-              <img src="/logo.png" alt="Mirin Logo" className="w-8 h-8 object-contain" />
+          <Link href="/">
+            <div className="flex items-center gap-3 group cursor-pointer">
+              <div className="bg-primary/10 p-2 rounded-lg shadow-lg group-hover:scale-105 transition-transform duration-300 backdrop-blur-md">
+                <img src="/logo.png" alt="Mirin Logo" className="w-8 h-8 object-contain" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-serif font-bold gradient-text-gold tracking-wide">
+                  Mirin
+                </h1>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-serif font-bold gradient-text-gold tracking-wide">
-                Mirin
-              </h1>
-            </div>
-          </div>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-8 font-medium">
-            <Link href="/products" className="text-foreground/80 hover:text-primary transition-colors uppercase tracking-widest text-xs">
-              {language === "th" ? "คอลเลกชัน" : "Collection"}
+            <Link href="/cars" className="text-foreground/80 hover:text-primary transition-colors uppercase tracking-widest text-xs">
+              {language === "th" ? "ดูมอเตอร์ไซค์" : "Browse Bikes"}
+            </Link>
+            <Link href="/cannabis" className="flex items-center gap-1.5 text-green-500 hover:text-green-400 transition-colors uppercase tracking-widest text-xs">
+              <Leaf className="w-3 h-3" />
+              Cannabis
             </Link>
             <Link href="/dashboard" className="text-foreground/80 hover:text-primary transition-colors uppercase tracking-widest text-xs">
-              {language === "th" ? "โปรไฟล์" : "Concierge"}
+              {language === "th" ? "การเช่าของฉัน" : "My Rentals"}
             </Link>
           </nav>
 
           <div className="flex items-center gap-4">
+            {/* Cart Button */}
+            <Link href="/cart">
+              <Button variant="ghost" size="sm" className="relative text-green-500 hover:text-green-400 hover:bg-green-500/10">
+                <ShoppingCart className="w-5 h-5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                    {totalItems}
+                  </span>
+                )}
+              </Button>
+            </Link>
             <LanguageToggle />
             {isAuthenticated ? (
               <Link href="/dashboard">
