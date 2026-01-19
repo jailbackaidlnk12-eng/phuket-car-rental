@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1768797542387,
+      "tag": "0000_warm_devos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1768804069762,
+      "tag": "0001_peaceful_squadron_supreme",
+      "breakpoints": true
+    }
+  ]
+}

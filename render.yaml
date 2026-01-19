@@ -1,0 +1,26 @@
+# Mirin Motorcycle Rental - Render Configuration
+# Deploy to Render.com free tier
+
+services:
+  - type: web
+    name: mirin-rental
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: pnpm install && pnpm build && pnpm seed
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: ./data/mirin.db
+      - key: PROMPTPAY_ID
+        value: "0812345678"
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_EMAIL
+        value: admin@mirin-rental.local
