@@ -301,7 +301,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7 h-auto gap-2">
             <TabsTrigger value="products">
               <LayoutGrid className="w-4 h-4 mr-2" />
               {language === "th" ? "สินค้า" : "Products"}
@@ -824,10 +824,10 @@ export default function AdminDashboard() {
                             <div>
                               <p className="text-xs text-muted-foreground">Status</p>
                               <p className={`font-semibold capitalize ${order.status === 'delivered' ? 'text-green-600' :
-                                  order.status === 'pending' ? 'text-yellow-600' :
-                                    order.status === 'processing' ? 'text-blue-600' :
-                                      order.status === 'shipped' ? 'text-purple-600' :
-                                        'text-destructive'
+                                order.status === 'pending' ? 'text-yellow-600' :
+                                  order.status === 'processing' ? 'text-blue-600' :
+                                    order.status === 'shipped' ? 'text-purple-600' :
+                                      'text-destructive'
                                 }`}>{order.status}</p>
                             </div>
                           </div>
