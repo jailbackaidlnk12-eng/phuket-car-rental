@@ -301,7 +301,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7 h-auto gap-2">
+          <TabsList className="flex flex-wrap w-full h-auto gap-2 mb-8 bg-muted/50 p-2">
             <TabsTrigger value="products">
               <LayoutGrid className="w-4 h-4 mr-2" />
               {language === "th" ? "สินค้า" : "Products"}
