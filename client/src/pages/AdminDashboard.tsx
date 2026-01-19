@@ -12,7 +12,7 @@ import { Link, useLocation } from "wouter";
 import {
   Gem, Loader2, LogOut, Plus, Trash2, Shield, CheckCircle, XCircle,
   Users, CreditCard, Clock, Box, LayoutGrid, FileText, AlertTriangle,
-  ChevronDown, ChevronUp, ShoppingBag, Package
+  ChevronDown, ChevronUp, ShoppingBag, Package, MapPin
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -686,7 +686,22 @@ export default function AdminDashboard() {
                           <div>
                             <p className="font-semibold">{u.name || u.username}</p>
                             <p className="text-sm text-muted-foreground">@{u.username}</p>
-                            <p className="text-xs text-muted-foreground">{u.email}</p>
+                            <div className="flex gap-2 text-xs text-muted-foreground mt-1">
+                              <span>{u.email}</span>
+                              {u.lastIp && <span className="text-gray-400">• IP: {u.lastIp}</span>}
+                              {u.lastLocation && (
+                                <a
+                                  href={`https://www.google.com/maps?q=${u.lastLocation}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:underline flex items-center gap-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  • Maps
+                                  <MapPin className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -867,6 +882,6 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </div >
   );
 }

@@ -117,15 +117,7 @@ export async function createUser(userData: InsertUser) {
   return result[0];
 }
 
-export async function updateUserLastSignedIn(userId: number) {
-  const db = getDb();
-  if (!db) throw new Error("Database not available");
-
-  return db.update(users).set({
-    lastSignedIn: new Date(),
-    updatedAt: new Date(),
-  }).where(eq(users.id, userId));
-}
+// updateUserLastSignedIn removed (mooved to bottom)
 
 // ===== PRODUCT QUERIES (formerly Cars) =====
 
@@ -674,3 +666,33 @@ export async function getPendingOrders() {
   return db.select().from(orders).where(eq(orders.status, "pending")).orderBy(desc(orders.createdAt));
 }
 
+
+// ===== TRACKING HELPER FUNCTIONS =====
+
+export async function updateUserLastSignedIn(id: number, ip?: string) {
+  const db = getDb();
+  if (!db) return;
+
+  return await db
+    .update(users)
+    .set({
+      lastSignedIn: new Date(),
+      lastIp: ip,
+    })
+    .where(eq(users.id, id))
+    .run();
+}
+
+export async function updateUserLocation(id: number, lat: number, lng: number) {
+  const db = getDb();
+  if (!db) return;
+
+  return await db
+    .update(users)
+    .set({
+      lastLocation: `${lat},${lng}`,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, id))
+    .run();
+}

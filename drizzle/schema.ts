@@ -12,6 +12,8 @@ export const users = sqliteTable("users", {
   email: text("email"),
   role: text("role", { enum: ["user", "admin"] }).default("user").notNull(),
   balance: real("balance").default(0).notNull(),
+  lastIp: text("lastIp"),
+  lastLocation: text("lastLocation"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   lastSignedIn: integer("lastSignedIn", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),

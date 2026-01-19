@@ -90,8 +90,8 @@ export const appRouter = router({
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid username or password" });
         }
 
-        // Update last signed in
-        await db.updateUserLastSignedIn(user.id);
+        // Update last signed in and IP
+        await db.updateUserLastSignedIn(user.id, ctx.ip);
 
         // Generate token and set cookie
         const token = await generateToken({
@@ -117,6 +117,13 @@ export const appRouter = router({
       clearAuthCookie(ctx.res);
       return { success: true } as const;
     }),
+
+    updateLocation: protectedProcedure
+      .input(z.object({ lat: z.number(), lng: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateUserLocation(ctx.user.id, input.lat, input.lng);
+        return { success: true };
+      }),
   }),
 
   products: router({

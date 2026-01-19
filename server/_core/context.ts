@@ -8,6 +8,7 @@ export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
   user: User | null;
+  ip: string;
 };
 
 export async function createContext(
@@ -33,9 +34,12 @@ export async function createContext(
     user = null;
   }
 
+  const ip = (opts.req.headers["x-forwarded-for"] as string) || opts.req.socket.remoteAddress || "unknown";
+
   return {
     req: opts.req,
     res: opts.res,
     user,
+    ip,
   };
 }

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useLocation } from "wouter";
-import { Gem, Loader2, Clock, CreditCard, LogOut, Shield, CheckCircle, AlertCircle, Bell, Box, Calendar } from "lucide-react";
+import { Gem, Loader2, Clock, CreditCard, LogOut, Shield, CheckCircle, AlertCircle, Bell, Box, Calendar, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { usePushNotification } from "@/hooks/usePushNotification";
 
@@ -44,6 +44,37 @@ export default function Dashboard() {
     if (granted) {
       toast.success(language === "th" ? "เปิดการแจ้งเตือนแล้ว" : "Notifications enabled");
     }
+  };
+
+  const updateLocation = trpc.auth.updateLocation.useMutation();
+
+  const handleShareLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error(language === "th" ? "เบราว์เซอร์ไม่รองรับ" : "Geolocation not supported");
+      return;
+    }
+
+    toast.loading(language === "th" ? "กำลังดึงตําแหน่ง..." : "Getting location...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          await updateLocation.mutateAsync({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          toast.dismiss();
+          toast.success(language === "th" ? "ส่งตําแหน่งเรียบร้อย" : "Location shared successfully");
+        } catch (error) {
+          toast.dismiss();
+          toast.error(language === "th" ? "ส่งตําแหน่งล้มเหลว" : "Failed to share location");
+        }
+      },
+      (error) => {
+        toast.dismiss();
+        toast.error(language === "th" ? "ไม่สามารถดึงตําแหน่งได้" : "Could not get location");
+      }
+    );
   };
 
   const calculateTimeRemaining = (endDate: Date) => {
@@ -228,6 +259,19 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </Link>
+          <Card
+            className="cursor-pointer hover:bg-muted/50 transition group"
+            onClick={handleShareLocation}
+          >
+            <CardContent className="pt-6 text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                <MapPin className="w-6 h-6 text-green-600 group-hover:text-white" />
+              </div>
+              <p className="font-semibold text-sm">
+                {language === "th" ? "แชร์พิกัด" : "Share Location"}
+              </p>
+            </CardContent>
+          </Card>
           {user?.role === "admin" && (
             <Link href="/admin">
               <Card className="cursor-pointer hover:bg-muted/50 transition group">
