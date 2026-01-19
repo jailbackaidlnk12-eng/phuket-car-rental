@@ -1,26 +1,40 @@
 import { eq, asc, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
+import { createClient } from "@libsql/client";
+import { drizzle as drizzleLibsql } from "drizzle-orm/libsql";
 import { InsertUser, users, products, rentals, payments, notifications, idCards, pushTokens, auditLogs, systemSettings } from "../drizzle/schema";
 import { existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 
-const DB_PATH = "./data/mirin.db";
+const DB_PATH = process.env.DB_PATH || "./data/mirin.db";
 
-let _db: ReturnType<typeof drizzle> | null = null;
+// Type definition for DB instance (support both BetterSQLite3 and LibSQL)
+// We use 'any' here to avoid complex union type issues between drivers that share the same API
+let _db: any = null;
 
 // Ensure database directory exists and create drizzle instance
 export function getDb() {
   if (!_db) {
     try {
-      // Ensure data directory exists
-      const dbDir = dirname(DB_PATH);
-      if (!existsSync(dbDir)) {
-        mkdirSync(dbDir, { recursive: true });
+      if (process.env.DATABASE_URL) {
+        // Use Turso (LibSQL) for Production / Cloud
+        const client = createClient({
+          url: process.env.DATABASE_URL,
+          authToken: process.env.DATABASE_AUTH_TOKEN,
+        });
+        _db = drizzleLibsql(client);
+        console.log("[Database] Connected to Turso/LibSQL");
+      } else {
+        // Use Better-SQLite3 for Local Development (Default)
+        const dbDir = dirname(DB_PATH);
+        if (!existsSync(dbDir)) {
+          mkdirSync(dbDir, { recursive: true });
+        }
+        const sqlite = new Database(DB_PATH);
+        _db = drizzle(sqlite);
+        console.log(`[Database] Connected to local SQLite at ${DB_PATH}`);
       }
-
-      const sqlite = new Database(DB_PATH);
-      _db = drizzle(sqlite);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
