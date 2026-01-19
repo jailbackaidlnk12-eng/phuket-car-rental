@@ -170,3 +170,39 @@ export const systemSettings = sqliteTable("systemSettings", {
 
 export type SystemSetting = typeof systemSettings.$inferSelect;
 export type InsertSystemSetting = typeof systemSettings.$inferInsert;
+
+/**
+ * Orders table for cannabis product purchases
+ */
+export const orders = sqliteTable("orders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("userId").notNull(),
+  status: text("status", {
+    enum: ["pending", "paid", "processing", "shipped", "delivered", "cancelled"]
+  }).default("pending").notNull(),
+  totalAmount: real("totalAmount").notNull(),
+  paymentId: integer("paymentId"),
+  shippingAddress: text("shippingAddress"),
+  notes: text("notes"),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+
+/**
+ * Order Items table for individual products in an order
+ */
+export const orderItems = sqliteTable("orderItems", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  orderId: integer("orderId").notNull(),
+  productId: integer("productId").notNull(),
+  quantity: integer("quantity").notNull(),
+  pricePerUnit: real("pricePerUnit").notNull(),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;
+

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
@@ -5,6 +6,7 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "sqlite",
   dbCredentials: {
-    url: "./data/mirin.db",
+    url: process.env.DATABASE_URL || "./data/mirin.db",
+    authToken: process.env.DATABASE_AUTH_TOKEN,
   },
 });

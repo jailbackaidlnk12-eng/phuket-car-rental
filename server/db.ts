@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { createClient } from "@libsql/client";
 import { drizzle as drizzleLibsql } from "drizzle-orm/libsql";
-import { InsertUser, users, products, rentals, payments, notifications, idCards, pushTokens, auditLogs, systemSettings } from "../drizzle/schema";
+import { InsertUser, users, products, rentals, payments, notifications, idCards, pushTokens, auditLogs, systemSettings, orders, orderItems, InsertOrder, InsertOrderItem } from "../drizzle/schema";
 import { existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 
@@ -581,3 +581,96 @@ export async function deleteUser(userId: number) {
 
   return db.delete(users).where(eq(users.id, userId));
 }
+
+// ===== ORDERS (Cannabis Sales) =====
+
+export async function createOrder(orderData: Omit<InsertOrder, "id" | "createdAt" | "updatedAt">) {
+  const db = getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(orders).values({
+    ...orderData,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }).returning();
+
+  return result[0];
+}
+
+export async function createOrderItem(itemData: Omit<InsertOrderItem, "id" | "createdAt">) {
+  const db = getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(orderItems).values({
+    ...itemData,
+    createdAt: new Date(),
+  });
+}
+
+export async function createOrderWithItems(
+  orderData: Omit<InsertOrder, "id" | "createdAt" | "updatedAt">,
+  items: Array<{ productId: number; quantity: number; price: number }>
+) {
+  const db = getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Create order first
+  const order = await createOrder(orderData);
+  if (!order) throw new Error("Failed to create order");
+
+  // Create order items
+  for (const item of items) {
+    await createOrderItem({
+      orderId: order.id,
+      productId: item.productId,
+      quantity: item.quantity,
+      pricePerUnit: item.price,
+    });
+  }
+
+  return order;
+}
+
+export async function getOrderById(id: number) {
+  const db = getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getOrderItems(orderId: number) {
+  const db = getDb();
+  if (!db) return [];
+
+  return db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+}
+
+export async function getUserOrders(userId: number) {
+  const db = getDb();
+  if (!db) return [];
+
+  return db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
+}
+
+export async function getAllOrders() {
+  const db = getDb();
+  if (!db) return [];
+
+  return db.select().from(orders).orderBy(desc(orders.createdAt));
+}
+
+export async function updateOrder(id: number, orderData: Partial<InsertOrder>) {
+  const db = getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(orders).set({ ...orderData, updatedAt: new Date() }).where(eq(orders.id, id));
+}
+
+export async function getPendingOrders() {
+  const db = getDb();
+  if (!db) return [];
+
+  return db.select().from(orders).where(eq(orders.status, "pending")).orderBy(desc(orders.createdAt));
+}
+

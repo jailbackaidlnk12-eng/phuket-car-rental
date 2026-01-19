@@ -1,11 +1,13 @@
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCart } from "@/contexts/CartContext";
 import { trpc } from "@/lib/trpc";
-import { Loader2, ShoppingBag, Leaf, Droplets, Wind, Brain, Activity } from "lucide-react";
+import { Loader2, ShoppingBag, Leaf, Droplets, Wind, Brain, Activity, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import { toast } from "sonner";
+import { Link } from "wouter";
 
 interface CannabisMetadata {
     type: "cannabis";
@@ -21,12 +23,13 @@ interface CannabisMetadata {
 
 export default function CannabisShop() {
     const { language } = useLanguage();
+    const { addItem, totalItems } = useCart();
 
     // Fetch products with category 'other' (we will filter for cannabis metadata on frontend or backend)
     // Ideally, backend should support filtering, but for now we fetch all 'other' or all products
     const { data: products, isLoading } = trpc.products.list.useQuery();
 
-    const cannabisProducts = products?.filter(p =>
+    const cannabisProducts = products?.filter((p: any) =>
         p.category === 'other' &&
         (p.metadata as any)?.type === 'cannabis'
     ) || [];
@@ -73,8 +76,14 @@ export default function CannabisShop() {
 
     const displayProducts = cannabisProducts.length > 0 ? cannabisProducts : demoProducts;
 
-    const handleAddToCart = (name: string) => {
-        toast.success(language === "th" ? `เพิ่ม ${name} ลงตะกร้าแล้ว` : `Added ${name} to cart`);
+    const handleAddToCart = (product: any) => {
+        addItem({
+            productId: product.id,
+            name: product.name,
+            price: product.dailyRate,
+            imageUrl: product.imageUrl,
+        });
+        toast.success(language === "th" ? `เพิ่ม ${product.name} ลงตะกร้าแล้ว` : `Added ${product.name} to cart`);
     };
 
     return (
@@ -177,7 +186,7 @@ export default function CannabisShop() {
                                                     <p className="text-2xl font-bold text-green-400">฿{product.dailyRate}</p>
                                                 </div>
                                                 <Button
-                                                    onClick={() => handleAddToCart(product.name)}
+                                                    onClick={() => handleAddToCart(product)}
                                                     className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/20"
                                                 >
                                                     <ShoppingBag className="w-4 h-4 mr-2" />
@@ -195,3 +204,5 @@ export default function CannabisShop() {
         </div>
     );
 }
+
+// Floating Cart Button at the bottom of the page is handled via Header

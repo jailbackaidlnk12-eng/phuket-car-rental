@@ -11,9 +11,11 @@ import IdCardVerification from "@/pages/IdCardVerification";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import CannabisShop from "@/pages/CannabisShop";
+import CartPage from "@/pages/CartPage";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { CartProvider } from "./contexts/CartContext";
 
 function Router() {
   return (
@@ -28,6 +30,7 @@ function Router() {
       <Route path={"/admin"} component={AdminDashboard} />
       <Route path={"/id-verification"} component={IdCardVerification} />
       <Route path={"/cannabis"} component={CannabisShop} />
+      <Route path={"/cart"} component={CartPage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -39,13 +42,16 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </CartProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
 }
 
 export default App;
+

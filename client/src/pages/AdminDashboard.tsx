@@ -12,7 +12,7 @@ import { Link, useLocation } from "wouter";
 import {
   Gem, Loader2, LogOut, Plus, Trash2, Shield, CheckCircle, XCircle,
   Users, CreditCard, Clock, Box, LayoutGrid, FileText, AlertTriangle,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, ShoppingBag, Package
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -46,6 +46,7 @@ export default function AdminDashboard() {
   const { data: pendingIdCards, isLoading: idCardsLoading } = trpc.idCard.pending.useQuery(undefined, { enabled: isAdmin });
   const { data: allIdCards } = trpc.idCard.all.useQuery(undefined, { enabled: isAdmin });
   const { data: auditLogs, isLoading: auditLogsLoading } = trpc.admin.auditLogs.useQuery({ limit: 100 }, { enabled: isAdmin });
+  const { data: allOrders, isLoading: ordersLoading } = trpc.orders.all.useQuery(undefined, { enabled: isAdmin });
 
   // Mutations
   const createProduct = trpc.products.create.useMutation({
@@ -74,6 +75,9 @@ export default function AdminDashboard() {
   });
   const removeAdmin = trpc.users.removeAdmin.useMutation({
     onSuccess: () => { utils.users.invalidate(); utils.admin.invalidate(); },
+  });
+  const updateOrderStatus = trpc.orders.updateStatus.useMutation({
+    onSuccess: () => { utils.orders.invalidate(); },
   });
 
   // Check if user is admin - AFTER all hooks
@@ -174,6 +178,9 @@ export default function AdminDashboard() {
     if (confirm("Remove admin privileges?")) {
       try { await removeAdmin.mutateAsync({ userId }); toast.success("Admin removed!"); } catch { toast.error("Error"); }
     }
+  };
+  const handleUpdateOrderStatus = async (orderId: number, status: string) => {
+    try { await updateOrderStatus.mutateAsync({ id: orderId, status: status as any }); toast.success(`Order updated to ${status}!`); } catch { toast.error("Error"); }
   };
 
   // Stats from server
@@ -318,6 +325,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="auditlogs">
               <FileText className="w-4 h-4 mr-2" />
               {language === "th" ? "Logs" : "Audit"}
+            </TabsTrigger>
+            <TabsTrigger value="orders">
+              <ShoppingBag className="w-4 h-4 mr-2" />
+              {language === "th" ? "ออเดอร์" : "Orders"}
             </TabsTrigger>
           </TabsList>
 
@@ -768,6 +779,87 @@ export default function AdminDashboard() {
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="w-12 h-12 mx-auto mb-2" />
                     No audit logs yet.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5" />
+                  {language === "th" ? "คำสั่งซื้อทั้งหมด" : "All Orders"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {ordersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : allOrders && allOrders.length > 0 ? (
+                  <div className="space-y-4">
+                    {allOrders.map((order: any) => (
+                      <div key={order.id} className="border rounded-lg p-4 hover:bg-muted/50 transition">
+                        <div className="flex justify-between items-center">
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 flex-1">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Order ID</p>
+                              <p className="font-semibold">#{order.id}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">User</p>
+                              <p className="font-semibold">#{order.userId}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Amount</p>
+                              <p className="font-semibold text-green-600">฿{order.totalAmount?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Date</p>
+                              <p className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Status</p>
+                              <p className={`font-semibold capitalize ${order.status === 'delivered' ? 'text-green-600' :
+                                  order.status === 'pending' ? 'text-yellow-600' :
+                                    order.status === 'processing' ? 'text-blue-600' :
+                                      order.status === 'shipped' ? 'text-purple-600' :
+                                        'text-destructive'
+                                }`}>{order.status}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <Select
+                              value={order.status}
+                              onValueChange={(val) => handleUpdateOrderStatus(order.id, val)}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="paid">Paid</SelectItem>
+                                <SelectItem value="processing">Processing</SelectItem>
+                                <SelectItem value="shipped">Shipped</SelectItem>
+                                <SelectItem value="delivered">Delivered</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {order.shippingAddress && (
+                          <p className="text-xs text-muted-foreground mt-2">📍 {order.shippingAddress}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Package className="w-12 h-12 mx-auto mb-2" />
+                    No orders yet.
                   </div>
                 )}
               </CardContent>

@@ -1,16 +1,20 @@
 import { Link } from "wouter";
-import { Bike, Bell } from "lucide-react";
+import { Bike, Bell, Leaf, Menu, X, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCart } from "@/contexts/CartContext";
 import { usePushNotification } from "@/hooks/usePushNotification";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export default function Header() {
     const { user, isAuthenticated } = useAuth();
     const { language } = useLanguage();
+    const { totalItems } = useCart();
     const { isSupported, permission, requestPermission } = usePushNotification();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const handleEnableNotifications = async () => {
         const granted = await requestPermission();
@@ -43,11 +47,26 @@ export default function Header() {
                     <Link href="/cars" className="text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] transition-colors duration-200 font-medium">
                         {language === "th" ? "ดูมอเตอร์ไซต์" : "Browse Bikes"}
                     </Link>
+                    <Link href="/cannabis" className="flex items-center gap-1.5 text-green-600 dark:text-green-400 hover:text-green-500 transition-colors duration-200 font-medium">
+                        <Leaf className="w-4 h-4" />
+                        {language === "th" ? "Cannabis" : "Cannabis"}
+                    </Link>
                     <Link href="/dashboard" className="text-gray-600 dark:text-gray-300 hover:text-[#D4AF37] transition-colors duration-200 font-medium">
                         {language === "th" ? "การเช่าของฉัน" : "My Rentals"}
                     </Link>
                 </nav>
                 <div className="flex items-center gap-4">
+                    {/* Cart Button */}
+                    <Link href="/cart">
+                        <Button variant="ghost" size="sm" className="relative text-green-600 hover:text-green-500 hover:bg-green-500/10">
+                            <ShoppingCart className="w-5 h-5" />
+                            {totalItems > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                                    {totalItems}
+                                </span>
+                            )}
+                        </Button>
+                    </Link>
                     <LanguageToggle />
                     {isSupported && permission !== "granted" && (
                         <Button
@@ -81,3 +100,4 @@ export default function Header() {
         </header>
     );
 }
+

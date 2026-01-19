@@ -631,6 +631,114 @@ export const appRouter = router({
       .input(z.object({ token: z.string() }))
       .mutation(async ({ input }) => db.deactivatePushToken(input.token)),
   }),
+
+  // ===== ORDERS (Cannabis Sales) =====
+  orders: router({
+    create: protectedProcedure
+      .input(z.object({
+        items: z.array(z.object({
+          productId: z.number(),
+          quantity: z.number().min(1),
+          price: z.number(),
+        })),
+        shippingAddress: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const totalAmount = input.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        // Add random satang for precise matching
+        const preciseAmount = addRandomSatang(totalAmount);
+
+        // Generate PromptPay QR for payment
+        const qrResult = await generatePromptPayQR(preciseAmount);
+
+        // Create order with items
+        const order = await db.createOrderWithItems(
+          {
+            userId: ctx.user.id,
+            totalAmount: preciseAmount,
+            status: "pending",
+            shippingAddress: input.shippingAddress,
+            notes: input.notes,
+          },
+          input.items
+        );
+
+        // Create pending payment
+        await db.createPayment({
+          userId: ctx.user.id,
+          amount: preciseAmount,
+          type: "top_up", // We'll use top_up type for now
+          status: "pending",
+          promptPayRef: qrResult.referenceId,
+        });
+
+        // Notify Admins
+        const admins = await db.getAdmins();
+        for (const admin of admins) {
+          await db.createNotification({
+            userId: admin.id,
+            title: "New Order",
+            message: `User ${ctx.user.username} placed an order: ฿${formatThbAmount(preciseAmount)}`,
+            type: "payment_received",
+            isRead: false,
+          });
+        }
+
+        return {
+          order,
+          payment: {
+            qrCodeDataUrl: qrResult.qrCodeDataUrl,
+            amount: preciseAmount,
+            amountFormatted: formatThbAmount(preciseAmount),
+            referenceId: qrResult.referenceId,
+          },
+        };
+      }),
+
+    myOrders: protectedProcedure.query(async ({ ctx }) => db.getUserOrders(ctx.user.id)),
+
+    detail: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const order = await db.getOrderById(input.id);
+        if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+        if (order.userId !== ctx.user.id && ctx.user.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+        }
+        const items = await db.getOrderItems(input.id);
+        return { ...order, items };
+      }),
+
+    // Admin routes
+    all: adminProcedure.query(async () => db.getAllOrders()),
+    pending: adminProcedure.query(async () => db.getPendingOrders()),
+
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["pending", "paid", "processing", "shipped", "delivered", "cancelled"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const order = await db.getOrderById(input.id);
+        if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+
+        await db.updateOrder(input.id, { status: input.status });
+
+        // Notify user
+        await db.createNotification({
+          userId: order.userId,
+          title: "Order Updated",
+          message: `Your order #${input.id} status changed to: ${input.status}`,
+          type: "payment_received",
+          isRead: false,
+        });
+
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
+

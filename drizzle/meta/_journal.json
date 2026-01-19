@@ -15,6 +15,13 @@
       "when": 1768804069762,
       "tag": "0001_peaceful_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768826405345,
+      "tag": "0002_furry_queen_noir",
+      "breakpoints": true
     }
   ]
 }
