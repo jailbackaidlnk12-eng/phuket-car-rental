@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link, useParams, useLocation } from "wouter";
-import { Gem, Loader2, ArrowLeft, Shield, AlertCircle, CheckCircle, Calendar, Star, Info } from "lucide-react";
+import { Gem, Loader2, ArrowLeft, Shield, AlertCircle, CheckCircle, Calendar, Star, Info, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ export default function ProductDetail() {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [location, setLocation] = useState("");
 
   const { data: product, isLoading } = trpc.products.detail.useQuery({ id: parseInt(id || "0") });
   const { data: idCardStatus } = trpc.idCard.getStatus.useQuery(
@@ -89,6 +90,7 @@ export default function ProductDetail() {
         productId: parseInt(id || "0"),
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+        location: location,
       });
       toast.success(language === "th" ? "จองสำเร็จ!" : "Booking confirmed!");
       navigate("/dashboard");
@@ -172,10 +174,10 @@ export default function ProductDetail() {
               )}
               {/* Status Badge */}
               <div className={`absolute top-6 right-6 px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md shadow-sm border ${product.status === 'available'
-                  ? 'bg-green-500/90 text-white border-green-400'
-                  : product.status === 'rented'
-                    ? 'bg-amber-500/90 text-white border-amber-400'
-                    : 'bg-red-500/90 text-white border-red-400'
+                ? 'bg-green-500/90 text-white border-green-400'
+                : product.status === 'rented'
+                  ? 'bg-amber-500/90 text-white border-amber-400'
+                  : 'bg-red-500/90 text-white border-red-400'
                 }`}>
                 {product.status === 'available'
                   ? (language === "th" ? "ว่าง" : "Available")
@@ -271,6 +273,22 @@ export default function ProductDetail() {
                 )}
 
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-sm font-medium text-muted-foreground">
+                      {language === "th" ? "สถานที่รับรถ" : "Delivery Location"}
+                    </Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder={language === "th" ? "เช่น สนามบิน, โรงแรม..." : "e.g. Airport, Hotel Name..."}
+                        className="pl-10 bg-background"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">
                       {language === "th" ? "เช็คอิน" : "Start Date"}

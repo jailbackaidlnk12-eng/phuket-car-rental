@@ -181,7 +181,12 @@ export const appRouter = router({
         return rental;
       }),
     create: protectedProcedure
-      .input(z.object({ productId: z.number(), startDate: z.date(), endDate: z.date() }))
+      .input(z.object({
+        productId: z.number(),
+        startDate: z.date(),
+        endDate: z.date(),
+        location: z.string().optional()
+      }))
       .mutation(async ({ input, ctx }) => {
         const product = await db.getProductById(input.productId);
         if (!product) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
@@ -201,6 +206,7 @@ export const appRouter = router({
           endDate: input.endDate,
           status: "pending",
           totalCost,
+          location: input.location,
         });
 
         // Add random satang for precise matching

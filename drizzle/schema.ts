@@ -53,6 +53,7 @@ export const rentals = sqliteTable("rentals", {
   actualReturnDate: integer("actualReturnDate", { mode: "timestamp" }),
   status: text("status", { enum: ["pending", "active", "completed", "cancelled"] }).default("pending").notNull(),
   totalCost: real("totalCost"),
+  location: text("location"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });

@@ -35,8 +35,11 @@ export function useAuth(options?: UseAuthOptions) {
       }
       throw error;
     } finally {
+      localStorage.removeItem("mirin-user-info");
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      // Force reload to clear all state/cookies cleanly
+      window.location.href = "/login";
     }
   }, [logoutMutation, utils]);
 
